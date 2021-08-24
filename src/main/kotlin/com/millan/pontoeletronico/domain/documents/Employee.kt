@@ -12,7 +12,7 @@ data class Employee (
     val cpf: String,
     val profile: ProfileEnum,
     val companyId: String,
-    val hourValue: Double,
+    val hourValue: Double? = 0.0,
     val dailyWorkedHours: Float? = 0.0f,
     val lunchTimeInHours: Float? = 0.0f,
     @Id val id: String? = null
