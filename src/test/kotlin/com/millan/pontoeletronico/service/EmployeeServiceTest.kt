@@ -35,15 +35,15 @@ class EmployeeServiceTest {
     @Throws(Exception::class)
     fun setUp() {
         BDDMockito.given(employeeRepository?.save(Mockito.any(Employee::class.java)))
-            .willReturn(employee())
+                .willReturn(employee())
         BDDMockito.given(employeeRepository?.findById(id)).willReturn(Optional.of(employee()))
         BDDMockito.given(employeeRepository?.findByEmail(email)).willReturn(employee())
         BDDMockito.given(employeeRepository?.findByCpf(cpf)).willReturn(employee())
     }
 
     private fun employee(): Employee = Employee(
-        "Alexandra", email, PasswordUtils().generateBcrypt("password"), cpf,
-        ProfileEnum.ROLE_USER, "1", 8.0, 8.0f, 1.0f, "1"
+            "Alexandra", email, PasswordUtils().generateBcrypt("password"), cpf,
+            ProfileEnum.ROLE_USER, "1", 8.0, 8.0f, 1.0f, "1"
     )
 
     @Test

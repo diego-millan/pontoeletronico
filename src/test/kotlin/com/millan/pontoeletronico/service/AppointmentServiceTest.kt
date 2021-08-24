@@ -5,7 +5,7 @@ import com.millan.pontoeletronico.domain.enums.TypeEnum
 import com.millan.pontoeletronico.repository.AppointmentRepository
 import com.millan.pontoeletronico.services.AppointmentService
 import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.BeforeEach
 import org.junit.runner.RunWith
 import org.mockito.BDDMockito
