@@ -36,8 +36,8 @@ class AppointmentController(
     fun save(@Valid @RequestBody appointmentDTO: AppointmentDTO, result: BindingResult)
             : ResponseEntity<Response<AppointmentDTO>> {
 
-        val response: Response<AppointmentDTO> = Response<AppointmentDTO>()
-        var responseEntity: ResponseEntity<Response<AppointmentDTO>>
+        val response: Response<AppointmentDTO> = Response()
+        val responseEntity: ResponseEntity<Response<AppointmentDTO>>
 
         validateEmployee(appointmentDTO, result)
 
@@ -46,12 +46,12 @@ class AppointmentController(
             responseEntity = ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(response)
 
         } else {
-            var appointment: Appointment = convertAppointmentFromDTO(appointmentDTO, result)
+            val appointment: Appointment = convertAppointmentFromDTO(appointmentDTO, result, appointmentDTO.id)
 
             appointmentService.save(appointment)
 
             response.data = convertAppointmentDTO(appointment)
-            responseEntity = ResponseEntity.ok(response)
+            responseEntity = ResponseEntity.status(HttpStatus.CREATED).body(response)
         }
 
         return responseEntity
@@ -59,37 +59,41 @@ class AppointmentController(
 
     @GetMapping(value = ["/{id}"])
     fun findById(@PathVariable("id") id: String): ResponseEntity<Response<AppointmentDTO>> {
-        val responseEntity : ResponseEntity<Response<AppointmentDTO>>
-        val response: Response<AppointmentDTO> = Response<AppointmentDTO>()
+        val responseEntity: ResponseEntity<Response<AppointmentDTO>>
+        val response: Response<AppointmentDTO> = Response()
 
-        var appointment : Optional<Appointment> = appointmentService.findById(id)
+        val appointment: Optional<Appointment> = appointmentService.findById(id)
 
         if (appointment.isEmpty) {
-            response.errors.add( "Appointment not found with id $id")
+            response.errors.add("Appointment not found with id $id")
             responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
         } else {
             response.data = convertAppointmentDTO(appointment.get())
             responseEntity = ResponseEntity.ok(response)
         }
 
-        return  responseEntity
+        return responseEntity
     }
 
     @GetMapping(value = ["employee/{employeeId}"])
-    fun findByEmployeeId(@PathVariable("employeeId") employeeId : String,
-                         @RequestParam(value = "page", defaultValue = "0") page: Int,
-                         @RequestParam(value = "ord", defaultValue = "id") ord: String,
-                         @RequestParam(value = "dir", defaultValue = "DESC") dir: String)
-            :  ResponseEntity<Response<Page<AppointmentDTO>>> {
+    fun findByEmployeeId(
+        @PathVariable("employeeId") employeeId: String,
+        @RequestParam(value = "page", defaultValue = "0") page: Int,
+        @RequestParam(value = "ord", defaultValue = "id") ord: String,
+        @RequestParam(value = "dir", defaultValue = "DESC") dir: String
+    )
+            : ResponseEntity<Response<Page<AppointmentDTO>>> {
 
-        val responseEntity : ResponseEntity<Response<Page<AppointmentDTO>>>
+        val responseEntity: ResponseEntity<Response<Page<AppointmentDTO>>>
         val response: Response<Page<AppointmentDTO>> = Response<Page<AppointmentDTO>>()
 
-        val pageRequest : PageRequest =
-            PageRequest.of (page, pageSize, Sort.Direction.valueOf(dir), ord)
+        val pageRequest: PageRequest =
+            PageRequest.of(page, pageSize, Sort.Direction.valueOf(dir), ord)
 
-        var appointments : Page<Appointment> = appointmentService.findByEmployeeId(employeeId, pageRequest)
-        val appointmentsDTO : Page<AppointmentDTO> =
+        val appointments: Page<Appointment> =
+            appointmentService.findByEmployeeId(employeeId, pageRequest)
+
+        val appointmentsDTO: Page<AppointmentDTO> =
             appointments.map { appointment -> convertAppointmentDTO(appointment) }
 
         response.data = appointmentsDTO
@@ -98,6 +102,44 @@ class AppointmentController(
         return responseEntity
     }
 
+    @PutMapping(value = ["/{id}"])
+    fun update(@PathVariable("id") id: String,
+                          @Valid @RequestBody appointmentDTO: AppointmentDTO,
+                          result: BindingResult) : ResponseEntity<Response<AppointmentDTO>> {
+
+        val responseEntity: ResponseEntity<Response<AppointmentDTO>>
+        val response: Response<AppointmentDTO> = Response<AppointmentDTO>()
+
+        validateEmployee(appointmentDTO, result)
+
+        val appointment : Appointment = convertAppointmentFromDTO(appointmentDTO, result, id)
+
+        if (result.hasErrors()) {
+            for (error in result.allErrors) response.errors.add(error.defaultMessage!!)
+            responseEntity = ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(response)
+        } else {
+            appointmentService.save(appointment)
+
+            response.data = convertAppointmentDTO(appointment)
+            responseEntity = ResponseEntity.status(HttpStatus.ACCEPTED).body(response)
+        }
+
+        return responseEntity
+    }
+
+    @DeleteMapping(value = ["/{id}"])
+    fun delete(@PathVariable("id") id : String) : ResponseEntity<Response<String>> {
+        val response: Response<String> = Response()
+        val appointment: Optional<Appointment> = appointmentService.findById(id)
+        if (appointment.isEmpty) {
+            response.errors.add("Error trying to delete apppointment, id $id not found")
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
+        }
+        appointmentService.delete(id)
+        return ResponseEntity.accepted().build()
+    }
+
+
     private fun convertAppointmentDTO(appointment: Appointment): AppointmentDTO = AppointmentDTO(
         dateFormat.format(appointment.date), appointment.type.toString(),
         appointment.description, appointment.location, appointment.employeeId, appointment.id
@@ -105,11 +147,13 @@ class AppointmentController(
 
     private fun convertAppointmentFromDTO(
         appointmentDTO: AppointmentDTO,
-        result: BindingResult
+        result: BindingResult,
+        appointmentId: String?
     ): Appointment {
 
-        if (appointmentDTO.id != null) {
-            val appointment: Optional<Appointment> = appointmentService.findById(appointmentDTO.id)
+        if (appointmentId != null) {
+
+            val appointment: Optional<Appointment> = appointmentService.findById(appointmentId)
 
             if (appointment.isEmpty) {
                 result.addError(ObjectError("appointment", "Appointment not found"))
