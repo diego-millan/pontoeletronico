@@ -129,13 +129,17 @@ class AppointmentController(
 
     @DeleteMapping(value = ["/{id}"])
     fun delete(@PathVariable("id") id : String) : ResponseEntity<Response<String>> {
+
         val response: Response<String> = Response()
         val appointment: Optional<Appointment> = appointmentService.findById(id)
+
         if (appointment.isEmpty) {
             response.errors.add("Error trying to delete apppointment, id $id not found")
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
         }
+
         appointmentService.delete(id)
+
         return ResponseEntity.accepted().build()
     }
 
