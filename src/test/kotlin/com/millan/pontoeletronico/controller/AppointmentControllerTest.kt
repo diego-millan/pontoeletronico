@@ -75,6 +75,41 @@ class AppointmentControllerTest {
                 .andExpect(jsonPath("$.errors").isEmpty)
     }
 
+    @Test
+    @WithMockUser
+    @Throws(Exception::class)
+    fun `when test save appointment with invalid user then throw precondition failed`() {
+
+        BDDMockito.given<Optional<Employee>>(employeeService?.findById(employeeId))
+            .willReturn(Optional.empty())
+        mockMvc!!.perform(
+            MockMvcRequestBuilders.post(baseURL)
+                .with(csrf())
+                .param("action", "signup")
+                .content(getJSONPostRequest())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isPreconditionFailed)
+                .andExpect(jsonPath("$.errors").value("Employee ID is invalid"))
+                .andExpect(jsonPath("$.data").isEmpty)
+    }
+
+    @Test
+    @WithMockUser
+    @Throws(Exception::class)
+    fun `when test when delete appointment by id then return status 202`() {
+        BDDMockito.given<Optional<Appointment>>(appointmentService?.findById(appointmentId))
+            .willReturn(Optional.of(createAppointment()))
+
+        mockMvc!!.perform(
+            MockMvcRequestBuilders
+                .delete(baseURL + appointmentId)
+                .with(csrf())
+                .param("action", "signup")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isAccepted)
+    }
+
     @Throws(JsonProcessingException::class)
     private fun getJSONPostRequest(): String {
 
