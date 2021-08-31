@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.*
 import javax.validation.Valid
 
 @RestController
@@ -27,7 +28,7 @@ class PFUserController(val companyService: CompanyService, val employeeService: 
             ResponseEntity<Response<EmployeeFormDTO>> {
         val response: Response<EmployeeFormDTO> = Response()
 
-        val company: Company? = companyService?.findByCnpj(employeeFormDTO.cnpj)
+        val company: Optional<Company> = companyService.findByCnpj(employeeFormDTO.cnpj)
         validateCompany(employeeFormDTO, company, result)
 
         if (result.hasErrors()) {
@@ -35,10 +36,10 @@ class PFUserController(val companyService: CompanyService, val employeeService: 
             return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(response)
         }
 
-        var employee: Employee = convertDTOToEmployee(employeeFormDTO, company!!)
+        var employee: Employee = convertDTOToEmployee(employeeFormDTO, company.get())
 
         employee = employeeService.save(employee)
-        response.data = convertEmployeeToDTO(employee, company!!)
+        response.data = convertEmployeeToDTO(employee, company.get())
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
 
@@ -56,10 +57,10 @@ class PFUserController(val companyService: CompanyService, val employeeService: 
 
 
     private fun validateCompany(employeeFormDTO: EmployeeFormDTO,
-                                company: Company?,
+                                company: Optional<Company>,
                                 result: BindingResult) {
 
-        if (company == null) {
+        if (company.isEmpty) {
             result.addError(ObjectError("company", "Company not found"))
         }
 

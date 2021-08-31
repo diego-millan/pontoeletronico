@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.*
 import javax.validation.Valid
 
 @RestController
@@ -63,8 +64,8 @@ class PJUserController(val companyService: CompanyService, val employeeService: 
 
     private fun validateForm(companyFormDTO: CompanyFormDTO, result: BindingResult) {
 
-        val company: Company? = companyService.findByCnpj(companyFormDTO.cnpj)
-        if (company != null) {
+        val company: Optional<Company> = companyService.findByCnpj(companyFormDTO.cnpj)
+        if (company.isEmpty) {
             result.addError(ObjectError("company", "Company CNPJ already exists"))
         }
 

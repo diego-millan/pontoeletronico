@@ -104,8 +104,6 @@ class AppointmentControllerTest {
         mockMvc!!.perform(
             MockMvcRequestBuilders
                 .delete(baseURL + appointmentId)
-                .with(csrf())
-                .param("action", "signup")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isAccepted)
     }

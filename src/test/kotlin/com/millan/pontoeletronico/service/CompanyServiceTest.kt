@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.context.junit4.SpringRunner
+import java.util.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -34,8 +35,8 @@ class CompanyServiceTest {
 
     @Test
     fun testFindCompanyByCnpj() {
-        val company: Company? = companyService?.findByCnpj(cnpj)
-        Assert.assertNotNull(company)
+        val company: Optional<Company>? = companyService?.findByCnpj(cnpj)
+        Assert.assertTrue(company!!.isPresent)
     }
 
     @Test
